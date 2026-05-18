@@ -1,0 +1,109 @@
+FREE BET BLACKJACK LOGIC EXPLANATION
+=====================================
+
+CARD VALUES:
+- A = 11 (always)
+- K, Q, J, T = 10
+- 2-9 = pip value
+
+PAYOUT MAPPING:
+- 0 tokens → 0 payout
+- 1 token → 4 payout
+- 2 tokens → 13 payout
+- 3 tokens → 31 payout
+- 4 tokens → 51 payout
+- 5+ tokens → 101 payout
+
+RULES:
+1. Auto fail: If first two cards are face cards (T, J, Q, K) → 0 payout
+2. Immediate double: If first two cards add to 9, 10, or 11 (and not a pair) → 1 token
+3. Pair starts chain: If first two cards are a pair, split them and each hand gets one card
+4. Hand ends when no more splits can be made
+
+CURRENT LOGIC IMPLEMENTATION:
+=============================
+
+The logic uses a recursive approach:
+
+1. _calculate_tokens_recursive(cards, start_index):
+   - Checks if we have a pair (split) in first two cards
+   - If pair: adds 1 token, then processes split hands
+   - If not pair: checks for immediate double opportunity
+
+2. _process_sub_split(cards, first_card_index, second_card_index, next_card_index):
+   - Handles sub-splits when a split hand gets another pair
+   - Each sub-split hand gets one card
+   - Recursively processes further splits
+
+EXAMPLE TRACES:
+===============
+
+Example 1: 6 6 3 4
+- Initial split: 6 6 (1 token)
+- Split hand 1: 6 + 3 (double, 6+3=9) (1 token)
+- Split hand 2: 6 + 4 (double, 6+4=10) (1 token)
+- Total: 3 tokens → 31 payout ✓
+
+Example 2: 6 6 6 3 4 3
+- Initial split: 6 6 (1 token)
+- Split hand 1: 6 + 6 (split) (1 token)
+  - Sub-split hand 1: 6 + 3 (double, 6+3=9) (1 token)
+  - Sub-split hand 2: 6 + 4 (double, 6+4=10) (1 token)
+- Split hand 2: 6 + 3 (double, 6+3=9) (1 token)
+- Total: 5 tokens → 101 payout ✓
+
+Example 3: 2 7
+- Immediate double: 2 + 7 = 9 (1 token)
+- Total: 1 token → 4 payout ✓
+
+Example 4: 2 3
+- No opportunities: 2 + 3 = 5
+- Total: 0 tokens → 0 payout ✓
+
+POTENTIAL ISSUES:
+================
+
+1. CARD DISTRIBUTION AFTER SPLITS:
+   The current logic assumes that after a split, the next two cards go to the split hands.
+   But this might not be correct for all scenarios.
+
+2. RECURSIVE DEPTH:
+   The recursive function might not be handling all possible split scenarios correctly.
+
+3. TOKEN COUNTING:
+   There might be double-counting or missed counting of tokens in complex scenarios.
+
+4. HAND TERMINATION:
+   The logic might not be correctly determining when a hand should end.
+
+DETAILED ANALYSIS OF COMPLEX CASE:
+==================================
+
+Let's trace through 6 6 6 6 6 6 step by step:
+
+1. Initial split: 6 6 (1 token)
+2. Split hand 1: 6 + 6 (split) (1 token)
+   - Sub-split hand 1: 6 + 6 (split) (1 token)
+     - Sub-sub-split hand 1: 6 + 6 (split) (1 token)
+     - Sub-sub-split hand 2: 6 + 6 (split) (1 token)
+   - Sub-split hand 2: 6 + 6 (split) (1 token)
+3. Split hand 2: 6 + 6 (split) (1 token)
+
+This gives us many tokens, but the question is: are we counting them correctly?
+
+The current logic might be over-counting because it's processing both split hands for every card, when it should only process the appropriate cards for each split hand.
+
+EXPECTED VALUE ANALYSIS:
+========================
+
+If the expected value is 1.07, that means:
+- On average, each hand pays out 1.07 units
+- This gives the house a 7% edge (since you bet 1 but get back 1.07 on average)
+- This seems reasonable for a casino side bet
+
+But if you believe this is wrong, the issue is likely in:
+1. The recursive token counting logic
+2. The card distribution after splits
+3. The hand termination logic
+
+The most likely issue is that the recursive logic is not correctly modeling how cards are distributed to split hands in complex scenarios.
