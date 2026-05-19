@@ -1,1 +1,4 @@
+__pycache__/
+*.pyc
+.DS_Store
 freebet_analysis_6card.csv
